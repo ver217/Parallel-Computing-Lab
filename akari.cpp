@@ -2,64 +2,9 @@
 #include <algorithm>
 #include <time.h>
 #include <iostream>
+#include <assert.h>
 using namespace std;
 
-/*
-输入数据由若干文件组成，每个文件描述一个Akari问题的初始状态，编写程序读入此文件，根据初始状态求解。有的有一个解，有的有多个解，我们保证有解。
-
-文件由若干行组成，第一行为两个整数 n，m，代表棋盘的行数和列数。之后的 n 行每行有 m 个整数表示棋盘的每个格子的状态，若它为 -2，则表示是白格子，若它为 -1，则表示是没有数字的黑格子，若它为 0-4，则表示是数字 0-4 的黑格子。若你想把灯泡放在白色格子上面，则需要将 -2 改为 5，因为 5 表示有灯泡的格子。
-
-你需要在右侧代码编辑框给出的函数中编写你的代码，函数的参数为我们给出的light up矩阵，你需要在该函数中返回相同大小的结果矩阵。对于有多个解的light up，你可以返回其中的任意一组解，我们将对你返回的矩阵进行检查，若结果正确，提示The answer is right!，否则提示其它。
-
-<-2 || >6表示被点亮
- */
-
-/*
-
-7 7
--2 1 -2 -2 -2 -2 -2
--2 -2 3 -2 -2 -2 0
--2 -2 -2 -2 -2 1 -2
--2 -2 -2 -1 -2 -2 -2
--2 1 -2 -2 -2 -2 -2
-0 -2 -2 -2 2 -2 -2
--2 -2 -2 -2 -2 0 -2 */
-
-/*
-7 7
--2 1 -2 -2 -2 -2 -2
--2 -2 -2 -2 -2 -2 1
--2 -2 1 -2 4 -2 -2
--2 -2 -2 -2 -2 -2 -2
--2 -2 0 -2 -1 -2 -2
-1 -2 -2 -2 -2 -2 -2
--2 -2 -2 -2 -2 0 -2  */
-
-/*
-7 7
--2 -2 -2 -2 -1 -2 -2
--2 2 -2 -2 -2 4 -2
--1 -2 -2 -1 -2 -2 -2
--2 -2 2 -1 1 -2 -2
--2 -2 -2 -1 -2 -2 1
--2 2 -2 -2 -2 -1 -2
--2 -2 2 -2 -2 -2 -2  */
-
-/*
-10 10
-2 -2 -2 -2 2 -2 -2 -2 -2 -1
--2 -1 -2 -2 -2 -2 -2 -2 -1 -2
--2 -2 -2 2 -2 -1 -2 -2 -2 -2
--2 -2 -2 -2 -2 -2 -2 2 -2 -2
--2 -2 2 -2 -2 -2 -2 -2 -2 1
--1 -2 -2 -2 -2 -2 -2 0 -2 -2
--2 -2 2 -2 -2 -2 -2 -2 -2 -2
--2 -2 -2 -2 1 -2 -1 -2 -2 -2
--2 -1 -2 -2 -2 -2 -2 -2 1 -2
-1 -2 -2 -2 -2 1 -2 -2 -2 0  */
-
-int call_cnt = 0;
-int call_cnt2 = 0;
 
 class NumCell {
   public:
@@ -230,44 +175,54 @@ inline bool neighbor_valid(const vector<vector<int>>& g, const NumCell& bulb, co
     return true;
 }
 
-bool handle_left_seq(vector<vector<int>>& g, const vector<NumCell>& blank_cells) {
+bool handle_left_seq(vector<vector<int>>& g, const vector<NumCell>& blank_cells, const int level) {
     // displayAkari(g);
-    cout << "left: " << ++call_cnt2 << "\r" << flush;
-    for (int i = 0; i < blank_cells.size(); i++) {
-        if (blank_cells[i].num == 6 || has_numcell_neighbor(g, blank_cells[i].y, blank_cells[i].x))
+    for (int i = level; i < blank_cells.size(); i++) {
+        // TODO: check
+        if (g[blank_cells[i].y][blank_cells[i].x] == 6)
+            break;
+        if (g[blank_cells[i].y][blank_cells[i].x] != -2 || has_numcell_neighbor(g, blank_cells[i].y, blank_cells[i].x))
             continue;
         light_up(g, blank_cells[i].y, blank_cells[i].x);
-        vector<NumCell> new_blank_cells;
-        new_blank_cells.reserve(blank_cells.size() - 1);
+        bool finish = true;
+        bool has_empty_cell = false;
         for (int j = 0; j < blank_cells.size(); j++) {
-            if (j == i)
-                continue;
-            if (g[blank_cells[j].y][blank_cells[j].x] == -2 || g[blank_cells[j].y][blank_cells[j].x] == 6)
-                new_blank_cells.push_back(blank_cells[j]);
+            if (g[blank_cells[j].y][blank_cells[j].x] == -2) {
+                finish = false;
+                has_empty_cell = true;
+                break;
+            } else if (g[blank_cells[j].y][blank_cells[j].x] == 6)
+                finish = false;
         }
-        if (new_blank_cells.empty())
+        if (finish)
             return true;
-        if (new_blank_cells[0].num == 6) {
+        if (!has_empty_cell) {
             unlight_up(g, blank_cells[i].y, blank_cells[i].x);
             continue;
         }
-        if (handle_left_seq(g, new_blank_cells))
+        if (handle_left_seq(g, blank_cells, i + 1))
             return true;
         else
             unlight_up(g, blank_cells[i].y, blank_cells[i].x);
     }
+    // bool finish = true;
+    // for (int j = 0; j < blank_cells.size(); j++) {
+    //     if (g[blank_cells[j].y][blank_cells[j].x] == -2 || g[blank_cells[j].y][blank_cells[j].x] == 6) {
+    //         finish = false;
+    //         break;
+    //     }
+    // }
+    // assert(finish == false);
     return false;
 }
 
 bool akari_seq(vector<vector<int>>& g, const vector<NumCell>& all_num_cells, const int level) {
-    cout << "akari: " << ++call_cnt <<  endl;
     if (level >= all_num_cells.size()) {
         vector<NumCell> blank_cells = get_blank_cells(g);
         if (blank_cells.empty())
             return true;
         sort(blank_cells.begin(), blank_cells.end());
-        call_cnt2 = 0;
-        return handle_left_seq(g, blank_cells);
+        return handle_left_seq(g, blank_cells, 0);
     }
     const NumCell& cell = all_num_cells[level];
     const int set_light_num = cell.num - count_neighbor(g, cell.y, cell.x, 5);
@@ -354,45 +309,20 @@ vector<vector<int> > solveAkari(vector<vector<int> > & g) {
             }
         }
     }
-    displayAkari(g);
+    // displayAkari(g);
     sort(all_num_cells.rbegin(), all_num_cells.rend());
-    clock_t start = clock();
+    // clock_t start = clock();
     if (akari_seq(g, all_num_cells, 0)) {
-        displayAkari(g);
+        // displayAkari(g);
         for (int i = 0; i < g.size(); i++) {
             for (int j = 0; j < g[i].size(); j ++) {
                 if (g[i][j] < -2 || g[i][j] >= 6)
                     g[i][j] = -2;
             }
         }
-    } else
-        cout << "gg" << endl;
-    cout << "time: " << ((double)(clock() - start) / CLOCKS_PER_SEC) << endl;
+    }
+    // cout << "time: " << ((double)(clock() - start) / CLOCKS_PER_SEC) << endl;
     return g;
 }
 
 }
-
-/*
-function transfer() {
-    const dom = document.querySelector('.board-back');
-    let divs = dom.children;
-    let row = Math.sqrt(divs.length - 1);
-    let cnt = row;
-    let total = `${row} ${row}`;
-    let line = '';
-    for (let i = 1; i < divs.length; i++) {
-        if (divs[i].classList.contains('wall'))
-            line += '-1 ';
-        else if (divs[i].classList.contains('cell-off'))
-            line += '-2 ';
-        else if (divs[i].classList.contains('light-up-task-cell'))
-            line += divs[i].innerText + ' ';
-        if (--cnt == 0) {
-            total += `\n${line}`;
-            line = '';
-            cnt = row;
-        }
-    }
-    return total;
-} */
