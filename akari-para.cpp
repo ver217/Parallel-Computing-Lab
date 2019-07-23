@@ -2,7 +2,8 @@
 #include <algorithm>
 #include <time.h>
 #include <iostream>
-#include <assert.h>
+#include <thread>
+#include <functional>
 using namespace std;
 
 
@@ -51,6 +52,7 @@ vector<NumCell> get_blank_cells(const vector<vector<int>>& g);
 inline bool neighbor_valid(const vector<vector<int>>& g, const NumCell& bulb, const NumCell& center);
 bool handle_left_seq(vector<vector<int>>& g, const vector<NumCell>& blank_cells, const int level);
 bool akari_seq(vector<vector<int>>& g, const vector<NumCell>& all_num_cells, const int level);
+void akari_task(vector<vector<int>>& g, const vector<NumCell>& all_num_cells, const int level, const vector<NumCell>& cells_avail, const vector<int>&one_comb, vector<bool>& valid, int i);
 
 vector<vector<int> > solveAkari(vector<vector<int> > & g) {
     vector<NumCell> all_num_cells;
@@ -138,27 +140,35 @@ bool akari_seq(vector<vector<int>>& g, const vector<NumCell>& all_num_cells, con
     if (cells_avail.size() < set_light_num)
         return false;
     vector<vector<int>> combs = comb(cells_avail.size(), set_light_num);
-    for (const vector<int>& one_comb : combs) {
-        bool valid = true;
-        for (int idx : one_comb) {
-            light_up(g, cells_avail[idx].y, cells_avail[idx].x);
-            if (!neighbor_valid(g, cells_avail[idx], cell)) {
-                unlight_up(g, cells_avail[idx].y, cells_avail[idx].x);
-                valid = false;
-                break;
-            }
-        }
-        if (!valid)
-            continue;
-        if (akari_seq(g, all_num_cells, level + 1))
+    vector<vector<vector<int>>> gs(combs.size(), g);
+    vector<bool> success(combs.size(), false);
+    vector<thread> threads(combs.size());
+    for (int i = 0; i < combs.size(); i++)
+        threads[i] = thread(akari_task, ref(gs[i]), cref(all_num_cells), level, cref(cells_avail), cref(combs[i]), ref(success), i);
+    for (int i = 0; i < combs.size(); i++)
+        threads[i].join();
+    for (int i = 0; i < combs.size(); i++) {
+        if (success[i]) {
+            g = gs[i];
             return true;
-        else {
-            for (int idx : one_comb)
-                unlight_up(g, cells_avail[idx].y, cells_avail[idx].x);
         }
     }
     return false;
 }
+
+void akari_task(vector<vector<int>>& g, const vector<NumCell>& all_num_cells, const int level, const vector<NumCell>& cells_avail, const vector<int>&one_comb, vector<bool>& valid, int i) {
+    // valid default false
+    const NumCell& cell = all_num_cells[level];
+    for (int idx : one_comb) {
+        light_up(g, cells_avail[idx].y, cells_avail[idx].x);
+        if (!neighbor_valid(g, cells_avail[idx], cell))
+            return;
+    }
+    if (akari_seq(g, all_num_cells, level + 1))
+        valid[i] = true;
+    return;
+}
+
 
 bool handle_left_seq(vector<vector<int>>& g, const vector<NumCell>& blank_cells, const int level) {
     // displayAkari(g);
@@ -302,6 +312,16 @@ vector<NumCell> get_blank_cells(const vector<vector<int>>& g) {
         }
     }
     return blank_cells;
+}
+
+inline bool all_shine(const vector<vector<int>>& g) {
+    for (int i = 0; i < g.size(); i++) {
+        for (int j = 0; j < g[0].size(); j ++) {
+            if (g[i][j] == 6)
+                return false;
+        }
+    }
+    return true;
 }
 
 inline bool neighbor_valid(const vector<vector<int>>& g, const NumCell& bulb, const NumCell& center) {
