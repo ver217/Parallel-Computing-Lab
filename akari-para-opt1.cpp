@@ -51,8 +51,9 @@ inline void unlight_up(vector<vector<int>>& g, int y, int x);
 vector<NumCell> get_blank_cells(const vector<vector<int>>& g);
 inline bool neighbor_valid(const vector<vector<int>>& g, const NumCell& bulb, const NumCell& center);
 bool handle_left_seq(vector<vector<int>>& g, const vector<NumCell>& blank_cells, const int level);
-bool akari_para(vector<vector<int>>& g, const vector<NumCell>& all_num_cells, const int level);
+bool akari_seq(vector<vector<int>>& g, const vector<NumCell>& all_num_cells, const int level);
 void akari_task(vector<vector<int>>& g, const vector<NumCell>& all_num_cells, const int level, const vector<NumCell>& cells_avail, const vector<int>&one_comb, vector<bool>& valid, int i);
+bool akari_top(vector<vector<int>>& g, const vector<NumCell>& all_num_cells, const int level);
 
 vector<vector<int> > solveAkari(vector<vector<int> > & g) {
     vector<NumCell> all_num_cells;
@@ -103,7 +104,7 @@ vector<vector<int> > solveAkari(vector<vector<int> > & g) {
     // displayAkari(g);
     sort(all_num_cells.rbegin(), all_num_cells.rend());
     clock_t start = clock();
-    if (akari_para(g, all_num_cells, 0)) {
+    if (akari_top(g, all_num_cells, 0)) {
         // displayAkari(g);
         for (int i = 0; i < g.size(); i++) {
             for (int j = 0; j < g[i].size(); j ++) {
@@ -116,7 +117,7 @@ vector<vector<int> > solveAkari(vector<vector<int> > & g) {
     return g;
 }
 
-bool akari_para(vector<vector<int>>& g, const vector<NumCell>& all_num_cells, const int level) {
+bool akari_top(vector<vector<int>>& g, const vector<NumCell>& all_num_cells, const int level) {
     if (level >= all_num_cells.size()) {
         vector<NumCell> blank_cells = get_blank_cells(g);
         if (blank_cells.empty())
@@ -127,7 +128,7 @@ bool akari_para(vector<vector<int>>& g, const vector<NumCell>& all_num_cells, co
     const NumCell& cell = all_num_cells[level];
     const int set_light_num = cell.num - count_neighbor(g, cell.y, cell.x, 5);
     if (set_light_num == 0)
-        return akari_para(g, all_num_cells, level + 1);
+        return akari_seq(g, all_num_cells, level + 1);
     vector<NumCell> cells_avail;
     if (cell.y > 0 && g[cell.y - 1][cell.x] == -2)
         cells_avail.push_back(NumCell(-2, cell.y - 1, cell.x));
@@ -164,9 +165,55 @@ void akari_task(vector<vector<int>>& g, const vector<NumCell>& all_num_cells, co
         if (!neighbor_valid(g, cells_avail[idx], cell))
             return;
     }
-    if (akari_para(g, all_num_cells, level + 1))
+    if (akari_seq(g, all_num_cells, level + 1))
         valid[i] = true;
     return;
+}
+
+bool akari_seq(vector<vector<int>>& g, const vector<NumCell>& all_num_cells, const int level) {
+    if (level >= all_num_cells.size()) {
+        vector<NumCell> blank_cells = get_blank_cells(g);
+        if (blank_cells.empty())
+            return true;
+        sort(blank_cells.begin(), blank_cells.end());
+        return handle_left_seq(g, blank_cells, 0);
+    }
+    const NumCell& cell = all_num_cells[level];
+    const int set_light_num = cell.num - count_neighbor(g, cell.y, cell.x, 5);
+    if (set_light_num == 0)
+        return akari_seq(g, all_num_cells, level + 1);
+    vector<NumCell> cells_avail;
+    if (cell.y > 0 && g[cell.y - 1][cell.x] == -2)
+        cells_avail.push_back(NumCell(-2, cell.y - 1, cell.x));
+    if (cell.y < g.size() - 1 && g[cell.y + 1][cell.x] == -2)
+        cells_avail.push_back(NumCell(-2, cell.y + 1, cell.x));
+    if (cell.x > 0 && g[cell.y][cell.x - 1] == -2)
+        cells_avail.push_back(NumCell(-2, cell.y, cell.x - 1));
+    if (cell.x < g[cell.y].size() - 1 && g[cell.y][cell.x + 1] == -2)
+        cells_avail.push_back(NumCell(-2, cell.y, cell.x + 1));
+    if (cells_avail.size() < set_light_num)
+        return false;
+    vector<vector<int>> combs = comb(cells_avail.size(), set_light_num);
+    for (const vector<int>& one_comb : combs) {
+        bool valid = true;
+        for (int idx : one_comb) {
+            light_up(g, cells_avail[idx].y, cells_avail[idx].x);
+            if (!neighbor_valid(g, cells_avail[idx], cell)) {
+                unlight_up(g, cells_avail[idx].y, cells_avail[idx].x);
+                valid = false;
+                break;
+            }
+        }
+        if (!valid)
+            continue;
+        if (akari_seq(g, all_num_cells, level + 1))
+            return true;
+        else {
+            for (int idx : one_comb)
+                unlight_up(g, cells_avail[idx].y, cells_avail[idx].x);
+        }
+    }
+    return false;
 }
 
 

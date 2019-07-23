@@ -140,17 +140,39 @@ bool akari_para(vector<vector<int>>& g, const vector<NumCell>& all_num_cells, co
     if (cells_avail.size() < set_light_num)
         return false;
     vector<vector<int>> combs = comb(cells_avail.size(), set_light_num);
-    vector<vector<vector<int>>> gs(combs.size(), g);
-    vector<bool> success(combs.size(), false);
-    vector<thread> threads(combs.size());
-    for (int i = 0; i < combs.size(); i++)
-        threads[i] = thread(akari_task, ref(gs[i]), cref(all_num_cells), level, cref(cells_avail), cref(combs[i]), ref(success), i);
-    for (int i = 0; i < combs.size(); i++)
-        threads[i].join();
-    for (int i = 0; i < combs.size(); i++) {
-        if (success[i]) {
-            g = gs[i];
-            return true;
+    if (set_light_num == 3) {
+        vector<vector<vector<int>>> gs(combs.size(), g);
+        vector<bool> success(combs.size(), false);
+        vector<thread> threads(combs.size());
+        for (int i = 0; i < combs.size(); i++)
+            threads[i] = thread(akari_task, ref(gs[i]), cref(all_num_cells), level, cref(cells_avail), cref(combs[i]), ref(success), i);
+        for (int i = 0; i < combs.size(); i++)
+            threads[i].join();
+        for (int i = 0; i < combs.size(); i++) {
+            if (success[i]) {
+                g = gs[i];
+                return true;
+            }
+        }
+    } else {
+        for (const vector<int>& one_comb : combs) {
+            bool valid = true;
+            for (int idx : one_comb) {
+                light_up(g, cells_avail[idx].y, cells_avail[idx].x);
+                if (!neighbor_valid(g, cells_avail[idx], cell)) {
+                    unlight_up(g, cells_avail[idx].y, cells_avail[idx].x);
+                    valid = false;
+                    break;
+                }
+            }
+            if (!valid)
+                continue;
+            if (akari_para(g, all_num_cells, level + 1))
+                return true;
+            else {
+                for (int idx : one_comb)
+                    unlight_up(g, cells_avail[idx].y, cells_avail[idx].x);
+            }
         }
     }
     return false;
