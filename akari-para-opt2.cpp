@@ -55,6 +55,7 @@ bool akari_para(vector<vector<int>>& g, const vector<NumCell>& all_num_cells, co
 void akari_task(vector<vector<int>>& g, const vector<NumCell>& all_num_cells, const int level, const vector<NumCell>& cells_avail, const vector<int>&one_comb, vector<bool>& valid, int i);
 
 vector<vector<int> > solveAkari(vector<vector<int> > & g) {
+    clock_t start = clock();
     vector<NumCell> all_num_cells;
     for (int i = 0; i < g.size(); i++) {
         for (int j = 0; j < g[0].size(); j++) {
@@ -100,11 +101,8 @@ vector<vector<int> > solveAkari(vector<vector<int> > & g) {
             }
         }
     }
-    // displayAkari(g);
     sort(all_num_cells.rbegin(), all_num_cells.rend());
-    clock_t start = clock();
     if (akari_para(g, all_num_cells, 0)) {
-        // displayAkari(g);
         for (int i = 0; i < g.size(); i++) {
             for (int j = 0; j < g[i].size(); j ++) {
                 if (g[i][j] < -2 || g[i][j] >= 6)
@@ -193,7 +191,6 @@ void akari_task(vector<vector<int>>& g, const vector<NumCell>& all_num_cells, co
 
 
 bool handle_left_seq(vector<vector<int>>& g, const vector<NumCell>& blank_cells, const int level) {
-    // displayAkari(g);
     for (int i = level; i < blank_cells.size(); i++) {
         if (g[blank_cells[i].y][blank_cells[i].x] == 6)
             break;
