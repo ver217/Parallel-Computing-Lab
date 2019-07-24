@@ -1,5 +1,8 @@
 import subprocess
 import argparse
+import re
+
+TIME_RE = re.compile(r'time:\s*(\d+(\.\d+)?)')
 
 
 def read_input(file):
@@ -25,6 +28,11 @@ if __name__ == "__main__":
             time = 0
             for test_case in test_cases:
                 p = subprocess.run(program, input=test_case, capture_output=True)
-                time += float(p.stdout.decode().split('\n')[0].split(':')[-1].strip())
+                lines = p.stdout.decode().split('\n')
+                for line in lines:
+                    reg_res = TIME_RE.match(line)
+                    if reg_res:
+                        time += float(reg_res.group(1))
+                        break
             times.append(time)
         print(f'{min(times):.2f}/{sum(times)/n_round:.2f}/{max(times):.2f} min/avg/max ms per round\n')

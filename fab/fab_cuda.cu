@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 
 __constant__ double params[4];
 
@@ -15,6 +16,7 @@ int main()
 {
     int n;
     scanf("%d", &n);
+    clock_t start = clock();
     if (n == 1)
         printf("1\n");
     else if (n == 2)
@@ -40,6 +42,7 @@ int main()
         printf("\n");
         free(nums_host);
     }
+    printf("time: %lf\n", ((double)clock() - start) / CLOCKS_PER_SEC * 1000);
 	return 0;
 }
 /***** End *****/

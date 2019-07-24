@@ -1,17 +1,29 @@
 .PHONY: clean
-all: seq para opt1 opt2
+all: seq para opt1 opt2 fabseq pthread openmp
 
-seq: akari.cpp akari.h test_akari.cpp
-	g++ -g akari.cpp test_akari.cpp -o akari
+seq: akari/akari.cpp akari/akari.h akari/test_akari.cpp
+	g++ -g akari/akari.cpp akari/test_akari.cpp -o bin/akari
 
-para: akari-para.cpp akari.h test_akari.cpp
-	g++ -g akari-para.cpp test_akari.cpp -pthread -o akari-para
+para: akari/akari-para.cpp akari/akari.h akari/test_akari.cpp
+	g++ -g akari/akari-para.cpp akari/test_akari.cpp -pthread -o bin/akari-para
 
-opt1: akari-para-opt1.cpp akari.h test_akari.cpp
-	g++ -g akari-para-opt1.cpp test_akari.cpp -pthread -o akari-opt1
+opt1: akari/akari-para-opt1.cpp akari/akari.h akari/test_akari.cpp
+	g++ -g akari/akari-para-opt1.cpp akari/test_akari.cpp -pthread -o bin/akari-opt1
 
-opt2: akari-para-opt2.cpp akari.h test_akari.cpp
-	g++ -g akari-para-opt2.cpp test_akari.cpp -pthread -o akari-opt2
+opt2: akari/akari-para-opt2.cpp akari/akari.h akari/test_akari.cpp
+	g++ -g akari/akari-para-opt2.cpp akari/test_akari.cpp -pthread -o bin/akari-opt2
+
+fabseq: fab/fab_seq.c
+	gcc -g fab/fab_seq.c -o bin/fab
+
+pthread: fab/fab_pthread.c
+	gcc -g fab/fab_pthread.c -lm -lpthread -o bin/fab-pthread
+
+openmp: fab/fab_openmp.c
+	gcc -g fab/fab_openmp.c -lm -o bin/fab-openmp
+
+cuda: fab/fab_cuda.cu
+	nvcc -g fab/fab_cuda.cu -lm -o bin/fab-cuda
 
 clean:
-	rm -f akari akari-para akari-opt1 akari-opt2
+	rm -f bin/*

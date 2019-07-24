@@ -35,7 +35,7 @@ int main() {
             printf(" %ld", nums[i]);
         printf("\n");
     }
-    printf("%lf ms\n", ((double)clock() - start) / CLOCKS_PER_SEC * 1000);
+    printf("time: %lf\n", ((double)clock() - start) / CLOCKS_PER_SEC * 1000);
     return 0;
 }
 /***** End *****/
