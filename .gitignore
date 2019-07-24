@@ -1,6 +1,3 @@
 .vscode/*
-a.out
-akari
-akari-para
-akari-opt1
-akari-opt2
+bin/*
+fab.txt

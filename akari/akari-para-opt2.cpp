@@ -138,7 +138,7 @@ bool akari_para(vector<vector<int>>& g, const vector<NumCell>& all_num_cells, co
     if (cells_avail.size() < set_light_num)
         return false;
     vector<vector<int>> combs = comb(cells_avail.size(), set_light_num);
-    if (set_light_num == 3) {
+    if (cell.num == 3) {
         vector<vector<vector<int>>> gs(combs.size(), g);
         vector<bool> success(combs.size(), false);
         vector<thread> threads(combs.size());

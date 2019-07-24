@@ -28,7 +28,7 @@ int main() {
     scanf("%d", &n);
     clock_t start = clock();
     print_fab(n);
-    printf("%lf sec\n", ((double)clock() - start) / CLOCKS_PER_SEC);
+    printf("%lf ms\n", ((double)clock() - start) / CLOCKS_PER_SEC * 1000);
     return 0;
 }
 /***** End *****/

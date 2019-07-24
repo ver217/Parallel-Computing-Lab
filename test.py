@@ -2,19 +2,20 @@ import subprocess
 import argparse
 
 
-def read_input():
-    with open('input.txt') as f:
+def read_input(file):
+    with open(file) as f:
         text = f.read()
         return [f'{case}\n'.encode() for case in text.split('\n\n')]
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('n-round', type=int, default=10)
+    parser.add_argument('testcase-file', type=str)
     parser.add_argument('programs', type=str, nargs='+')
+    parser.add_argument('--n-round', type=int, default=10)
     args = parser.parse_args()
-    n_round = getattr(args, 'n-round')
-    test_cases = read_input()
+    n_round = args.n_round
+    test_cases = read_input(getattr(args, 'testcase-file'))
     print(f'{n_round} rounds')
     print(f'{len(test_cases)} test cases\n')
     for program in args.programs:
