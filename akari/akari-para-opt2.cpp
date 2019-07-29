@@ -158,13 +158,16 @@ bool akari_para(vector<vector<int>>& g, const vector<NumCell>& all_num_cells, co
             for (int idx : one_comb) {
                 light_up(g, cells_avail[idx].y, cells_avail[idx].x);
                 if (!neighbor_valid(g, cells_avail[idx], cell)) {
-                    unlight_up(g, cells_avail[idx].y, cells_avail[idx].x);
                     valid = false;
                     break;
                 }
             }
-            if (!valid)
+            if (!valid) {
+                for (int idx : one_comb)
+                    if (g[cells_avail[idx].y][cells_avail[idx].x] == 5)
+                        unlight_up(g, cells_avail[idx].y, cells_avail[idx].x);
                 continue;
+            }
             if (akari_para(g, all_num_cells, level + 1))
                 return true;
             else {

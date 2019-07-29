@@ -24,6 +24,9 @@ pthread: fab/fab_pthread.c
 openmp: fab/fab_openmp.c
 	gcc $(CFLAGS) fab/fab_openmp.c -lm -o bin/fab-openmp
 
+mpi: fab/fab_mpi.c
+	gcc $(CFLAGS) fab/fab_mpi.c -lm -o bin/fab-mpi
+
 cuda: fab/fab_cuda.cu
 	nvcc -g fab/fab_cuda.cu -lm -o bin/fab-cuda
 
