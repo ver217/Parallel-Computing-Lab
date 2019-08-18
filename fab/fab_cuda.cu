@@ -5,7 +5,7 @@
 __constant__ double params[4];
 
 #define fabn(n) \
-    ((long)(params[1] * (pow(params[2], n) - pow(params[3], n))))
+    ((long)(params[1] * (powf(params[2], n) - powf(params[3], n))))
 
 __global__ static void fab(long *nums) {
     nums[threadIdx.x] = fabn((double)threadIdx.x + 3);
